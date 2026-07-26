@@ -1,0 +1,37 @@
+:root {
+  --ink: #1B2A2E;
+  --paper: #F6F4EF;
+  --paper-raised: #FFFFFF;
+  --sage: #5C7A6E;
+  --sage-deep: #3F5A4E;
+  --sage-soft: #E4EBE7;
+  --slate: #3E5568;
+  --amber: #C98A3D;
+  --amber-soft: #FBF0E1;
+  --clay: #B34B3C;
+  --clay-soft: #F8E7E4;
+  --info: #3E5568;
+  --info-soft: #E7ECEF;
+  --border: #E2DDD1;
+  --shadow-rgb: 27, 42, 46;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.card-elevate {
+  box-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.04), 0 1px 1px rgba(var(--shadow-rgb), 0.03);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.card-elevate:hover {
+  box-shadow: 0 8px 24px rgba(var(--shadow-rgb), 0.08), 0 2px 6px rgba(var(--shadow-rgb), 0.04);
+  transform: translateY(-1px);
+}

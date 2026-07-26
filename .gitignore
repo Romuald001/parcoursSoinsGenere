@@ -10,4 +10,4 @@ dist/
 
 # IDE
 .vscode/
-.idea/
+.idea/backend/parcours_soins.db

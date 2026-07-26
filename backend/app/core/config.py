@@ -21,5 +21,11 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
 
+    database_url: str = "sqlite:///./parcours_soins.db"
+
+    secret_key: str = "codejwt"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 480  # 8h, une session de travail
+
 
 settings = Settings()
