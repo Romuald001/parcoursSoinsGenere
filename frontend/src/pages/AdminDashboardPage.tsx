@@ -8,23 +8,23 @@ import { registerDoctor, listDoctors } from "../api/client";
 
 export default function AdminDashboardPage() {
   const queryClient = useQueryClient();
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // React Query gère lui-même le fetch au montage, le cache et les re-fetch :
-  // plus besoin d'un useEffect manuel qui appellerait setState.
   const { data: doctors = [] } = useQuery({
     queryKey: ["doctors"],
     queryFn: listDoctors,
   });
 
   const mutation = useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      registerDoctor(email, password),
+    mutationFn: ({ email, password, fullName }: { email: string; password: string; fullName: string }) =>
+      registerDoctor(email, password, fullName),
     onSuccess: () => {
-      setSuccess(`Compte créé pour ${email}.`);
+      setSuccess(`Compte créé pour ${fullName || email}.`);
+      setFullName("");
       setEmail("");
       setPassword("");
       queryClient.invalidateQueries({ queryKey: ["doctors"] });
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-    mutation.mutate({ email, password });
+    mutation.mutate({ email, password, fullName });
   }
 
   return (
@@ -68,34 +68,45 @@ export default function AdminDashboardPage() {
         <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--slate)" }}>
           Créer un compte médecin
         </p>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2">
           <input
-            type="email"
+            type="text"
             required
-            placeholder="Email du médecin"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none"
+            placeholder="Nom complet (ex: Dr Sophie Martin)"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="px-3 py-2 rounded-lg border text-sm focus:outline-none"
             style={{ borderColor: "var(--border)", color: "var(--ink)" }}
           />
-          <input
-            type="password"
-            required
-            placeholder="Mot de passe temporaire"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none"
-            style={{ borderColor: "var(--border)", color: "var(--ink)" }}
-          />
-          <button
-            type="submit"
-            disabled={mutation.isPending}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-40 transition hover:brightness-110"
-            style={{ background: "var(--sage)" }}
-          >
-            {mutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
-            Créer
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="email"
+              required
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none"
+              style={{ borderColor: "var(--border)", color: "var(--ink)" }}
+            />
+            <input
+              type="password"
+              required
+              placeholder="Mot de passe temporaire"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none"
+              style={{ borderColor: "var(--border)", color: "var(--ink)" }}
+            />
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-40 transition hover:brightness-110"
+              style={{ background: "var(--sage)" }}
+            >
+              {mutation.isPending ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
+              Créer
+            </button>
+          </div>
         </div>
         {error && <p className="text-sm mt-3" style={{ color: "var(--clay)" }}>{error}</p>}
         {success && <p className="text-sm mt-3" style={{ color: "var(--sage)" }}>{success}</p>}

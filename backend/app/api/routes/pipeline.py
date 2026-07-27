@@ -23,7 +23,7 @@ async def run_full_pipeline(
     payload: PipelineRequest,
     response: Response,
     db: Session = Depends(get_db),
-    _doctor: UserORM = Depends(require_doctor),
+    doctor: UserORM = Depends(require_doctor),
 ) -> DashboardSchema:
     orchestrator = OrchestratorAgent(llm_client=get_llm_client())
     try:
@@ -32,7 +32,8 @@ async def run_full_pipeline(
         raise HTTPException(status_code=422, detail=str(e)) from e
 
     patient_orm = get_or_create_patient(db, result.patient_record)
-    save_consultation(db, patient_orm, payload.raw_note, result.patient_record, result.personalized_summary)
+    save_consultation(db, patient_orm, payload.raw_note, result.patient_record, result.personalized_summary, doctor)
     response.headers["X-Patient-Id"] = patient_orm.id
+    response.headers["X-Doctor-Name"] = doctor.full_name or doctor.email or "Médecin"
 
     return transform_to_dashboard_schema(result)

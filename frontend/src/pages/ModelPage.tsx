@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, ArrowLeft, ChevronDown, Pill, Stethoscope, Target, Calendar } from "lucide-react";
-import AppHeader from "../components/layout/AppHeader";
+import { Loader2, ArrowLeft, ChevronDown, Pill, Stethoscope, Target, Calendar, type LucideIcon } from "lucide-react";
 import StepIndicator from "../components/layout/StepIndicator";
 import type { PatientRecord } from "../api/client";
 
@@ -13,13 +12,41 @@ interface Props {
   error: string | null;
 }
 
+interface DiagnosticItem {
+  label: string;
+  icd10_code?: string | null;
+}
+
+interface MedicationItem {
+  name: string;
+  dosage: string;
+  frequency: string;
+}
+
+interface GoalItem {
+  label: string;
+  unit?: string | null;
+  current_value?: number;
+  target_value?: number;
+}
+
+interface AppointmentItem {
+  label: string;
+  location?: string | null;
+}
+
+interface AlertItem {
+  severity: "info" | "warning" | "critical";
+  message: string;
+}
+
 const SEVERITY_STYLE: Record<string, { bg: string; fg: string; label: string }> = {
   info: { bg: "var(--info-soft)", fg: "var(--info)", label: "Information" },
   warning: { bg: "var(--amber-soft)", fg: "var(--amber)", label: "À vérifier" },
   critical: { bg: "var(--clay-soft)", fg: "var(--clay)", label: "Important" },
 };
 
-function SummaryRow({ icon: Icon, title, subtitle }: { icon: any; title: string; subtitle?: string }) {
+function SummaryRow({ icon: Icon, title, subtitle }: { icon: LucideIcon; title: string; subtitle?: string }) {
   return (
     <div className="flex items-start gap-3 py-2.5">
       <Icon size={16} style={{ color: "var(--sage)" }} className="mt-0.5 shrink-0" />
@@ -34,11 +61,11 @@ function SummaryRow({ icon: Icon, title, subtitle }: { icon: any; title: string;
 export default function ModelPage({ record, onConfirm, onBack, loading, error }: Props) {
   const [showRawJson, setShowRawJson] = useState(false);
 
-  const diagnostics = (record.diagnostics as any[]) ?? [];
-  const medications = (record.medications as any[]) ?? [];
-  const goals = (record.clinical_goals as any[]) ?? [];
-  const appointments = (record.appointments as any[]) ?? [];
-  const alerts = (record.alerts as any[]) ?? [];
+  const diagnostics = (record.diagnostics as DiagnosticItem[] | undefined) ?? [];
+  const medications = (record.medications as MedicationItem[] | undefined) ?? [];
+  const goals = (record.clinical_goals as GoalItem[] | undefined) ?? [];
+  const appointments = (record.appointments as AppointmentItem[] | undefined) ?? [];
+  const alerts = (record.alerts as AlertItem[] | undefined) ?? [];
 
   return (
     <motion.div
@@ -47,7 +74,6 @@ export default function ModelPage({ record, onConfirm, onBack, loading, error }:
       transition={{ duration: 0.3 }}
       className="max-w-2xl mx-auto px-4 py-10"
     >
-      <AppHeader />
       <StepIndicator current="model" />
 
       <h1 className="text-3xl mb-2" style={{ fontFamily: "var(--font-display)", color: "var(--ink)" }}>
@@ -84,7 +110,7 @@ export default function ModelPage({ record, onConfirm, onBack, loading, error }:
       >
         <div className="px-4">
           {diagnostics.map((d, i) => (
-            <SummaryRow key={`d-${i}`} icon={Stethoscope} title={d.label} subtitle={d.icd10_code} />
+            <SummaryRow key={`d-${i}`} icon={Stethoscope} title={d.label} subtitle={d.icd10_code ?? undefined} />
           ))}
           {medications.map((m, i) => (
             <SummaryRow key={`m-${i}`} icon={Pill} title={m.name} subtitle={`${m.dosage} — ${m.frequency}`} />

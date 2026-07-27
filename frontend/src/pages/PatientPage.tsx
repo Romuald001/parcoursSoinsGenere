@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { isAxiosError } from "axios";
 import { useMutation } from "@tanstack/react-query";
-import { RotateCcw, UserPlus, Loader2 } from "lucide-react";
+import { RotateCcw, UserPlus, Loader2, Download, Stethoscope } from "lucide-react";
 import type { DashboardSchema } from "../types/dashboardSchema";
 import DashboardRenderer from "../components/renderer/DashboardRenderer";
 import AppHeader from "../components/layout/AppHeader";
@@ -12,7 +12,9 @@ import { registerPatientAccount } from "../api/client";
 interface Props {
   schema: DashboardSchema;
   patientId?: string | null;
+  doctorName?: string | null;
   onRestart?: () => void;
+  showHeader?: boolean;
 }
 
 function CreatePatientAccountForm({ patientId }: { patientId: string }) {
@@ -40,13 +42,12 @@ function CreatePatientAccountForm({ patientId }: { patientId: string }) {
 
   return (
     <div
-      className="rounded-xl p-5 border mt-8"
+      className="rounded-xl p-5 border mt-8 print:hidden"
       style={{ background: "var(--paper-raised)", borderColor: "var(--border)" }}
     >
       <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--slate)" }}>
         Créer un accès patient
       </p>
-
       <div className="flex gap-2 mb-3">
         <button
           type="button"
@@ -73,7 +74,6 @@ function CreatePatientAccountForm({ patientId }: { patientId: string }) {
           Téléphone
         </button>
       </div>
-
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
         <input
           type={identifierType === "email" ? "email" : "tel"}
@@ -103,7 +103,6 @@ function CreatePatientAccountForm({ patientId }: { patientId: string }) {
           Créer
         </button>
       </form>
-
       {success && <p className="text-sm mt-3" style={{ color: "var(--sage)" }}>Accès patient créé avec succès.</p>}
       {mutation.isError && (
         <p className="text-sm mt-3" style={{ color: "var(--clay)" }}>
@@ -116,12 +115,37 @@ function CreatePatientAccountForm({ patientId }: { patientId: string }) {
   );
 }
 
-export default function PatientPage({ schema, patientId, onRestart }: Props) {
+export default function PatientPage({ schema, patientId, doctorName, onRestart, showHeader = false}: Props) {
+  useEffect(() => {
+    document.title = `${schema.patient_header.full_name} — Parcours de Soins`;
+    return () => {
+      document.title = "Parcours de Soins Généré";
+    };
+  }, [schema.patient_header.full_name]);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       <div className="max-w-6xl mx-auto px-6 pt-10">
-        <AppHeader />
-        {onRestart && <StepIndicator current="patient" />}
+          {showHeader && <AppHeader />}
+          {onRestart && (
+            <div className="print:hidden">
+              <StepIndicator current="patient" />
+            </div>
+          )}
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-1.5 text-xs font-medium mb-2 px-3 py-1.5 rounded-lg border print:hidden"
+          style={{ borderColor: "var(--border)", color: "var(--slate)" }}
+        >
+          <Download size={13} />
+          Télécharger en PDF
+        </button>
+        {doctorName && (
+          <div className="flex items-center gap-1.5 mb-4 text-xs" style={{ color: "var(--slate)" }}>
+            <Stethoscope size={13} />
+            Consultation réalisée par {doctorName}
+          </div>
+        )}
       </div>
       <DashboardRenderer schema={schema} />
       <div className="max-w-6xl mx-auto px-6 pb-10">
@@ -129,7 +153,7 @@ export default function PatientPage({ schema, patientId, onRestart }: Props) {
         {onRestart && (
           <button
             onClick={onRestart}
-            className="flex items-center gap-1.5 text-sm font-medium mt-6"
+            className="flex items-center gap-1.5 text-sm font-medium mt-6 print:hidden"
             style={{ color: "var(--slate)" }}
           >
             <RotateCcw size={14} />

@@ -23,7 +23,7 @@ export default function AppHeader() {
       {token && (
         <button
           onClick={logout}
-          className="flex items-center gap-1.5 text-xs font-medium transition hover:opacity-70"
+          className="flex items-center gap-1.5 text-xs font-medium transition hover:opacity-70 print:hidden"
           style={{ color: "var(--slate)" }}
         >
           <LogOut size={13} />

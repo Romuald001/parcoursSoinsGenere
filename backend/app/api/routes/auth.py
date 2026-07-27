@@ -14,6 +14,7 @@ router = APIRouter()
 class RegisterDoctorRequest(BaseModel):
     email: EmailStr
     password: str
+    full_name: str | None = None
 
 
 class RegisterPatientAccountRequest(BaseModel):
@@ -49,7 +50,12 @@ def register_doctor(
 ):
     if db.query(UserORM).filter_by(email=payload.email).first():
         raise HTTPException(status_code=409, detail="Cet email est déjà utilisé.")
-    user = UserORM(email=payload.email, hashed_password=hash_password(payload.password), role="doctor")
+    user = UserORM(
+        email=payload.email,
+        hashed_password=hash_password(payload.password),
+        role="doctor",
+        full_name=payload.full_name,
+    )
     db.add(user)
     db.commit()
     return {"message": "Compte médecin créé."}
@@ -61,8 +67,6 @@ def register_patient_account(
     db: Session = Depends(get_db),
     _doctor: UserORM = Depends(require_doctor),
 ):
-    """Réservé aux médecins. Le patient se connectera avec l'identifiant
-    fourni ici (email ou téléphone) — au moins un des deux est requis."""
     patient = db.query(PatientORM).filter_by(id=payload.patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient introuvable.")

@@ -8,11 +8,15 @@ import AppHeader from "../components/layout/AppHeader";
 
 export default function PatientOwnDashboardPage() {
   const [schema, setSchema] = useState<DashboardSchema | null>(null);
+  const [doctorName, setDoctorName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     getMyDashboard()
-      .then(setSchema)
+      .then(({ schema, doctorName }) => {
+        setSchema(schema);
+        setDoctorName(doctorName);
+      })
       .catch((e: unknown) => {
         const message =
           isAxiosError(e) && typeof e.response?.data?.detail === "string"
@@ -42,5 +46,5 @@ export default function PatientOwnDashboardPage() {
     );
   }
 
-  return <PatientPage schema={schema} />;
+  return <PatientPage schema={schema} doctorName={doctorName} showHeader />;
 }

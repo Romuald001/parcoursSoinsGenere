@@ -3,6 +3,7 @@ import re
 
 from app.domain.models.patient_record import PatientRecord
 from app.prompts.extractor_prompt import EXTRACTOR_SYSTEM_PROMPT
+from app.prompts.extractor_update_prompt import EXTRACTOR_UPDATE_SYSTEM_PROMPT
 from app.services.llm_client import LLMClient
 from app.agents.base import Agent
 
@@ -13,7 +14,10 @@ class ExtractionError(Exception):
 
 class ExtractorAgent(Agent):
     """Agent Extracteur : transforme une note médicale en texte libre
-    en un PatientRecord structuré et validé (transformation M2M)."""
+    en un PatientRecord structuré et validé (transformation M2M).
+
+    Supporte aussi la MISE À JOUR d'un dossier existant à partir d'une
+    nouvelle note (continuité de soins), via run_update()."""
 
     def __init__(self, llm_client: LLMClient) -> None:
         self._llm_client = llm_client
@@ -23,15 +27,30 @@ class ExtractorAgent(Agent):
             system_prompt=EXTRACTOR_SYSTEM_PROMPT,
             user_message=raw_note,
         )
-        json_text = self._extract_json_block(raw_response)
+        return self._parse_response(raw_response)
 
+    async def run_update(self, previous_record: PatientRecord, raw_note: str) -> PatientRecord:
+        """Met à jour un dossier existant à partir d'une nouvelle note,
+        en conservant l'historique clinique pertinent (pas une ré-extraction
+        depuis zéro)."""
+        user_message = (
+            f"DOSSIER ACTUEL:\n{previous_record.model_dump_json()}\n\n"
+            f"NOUVELLE NOTE:\n{raw_note}"
+        )
+        raw_response = await self._llm_client.complete(
+            system_prompt=EXTRACTOR_UPDATE_SYSTEM_PROMPT,
+            user_message=user_message,
+        )
+        return self._parse_response(raw_response)
+
+    def _parse_response(self, raw_response: str) -> PatientRecord:
+        json_text = self._extract_json_block(raw_response)
         try:
             data = json.loads(json_text)
         except json.JSONDecodeError as e:
             raise ExtractionError(
                 f"La réponse du LLM n'est pas un JSON valide : {e}\nRéponse brute : {raw_response}"
             ) from e
-
         try:
             return PatientRecord.model_validate(data)
         except Exception as e:
@@ -41,8 +60,6 @@ class ExtractorAgent(Agent):
 
     @staticmethod
     def _extract_json_block(text: str) -> str:
-        """Nettoie la réponse du LLM au cas où il aurait entouré le JSON de balises markdown
-        malgré la consigne (défense en profondeur, comportement LLM non 100% déterministe)."""
         match = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
         if match:
             return match.group(1)

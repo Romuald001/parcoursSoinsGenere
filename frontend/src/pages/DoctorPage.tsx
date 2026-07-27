@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Loader2 } from "lucide-react";
-import AppHeader from "../components/layout/AppHeader";
 import StepIndicator from "../components/layout/StepIndicator";
 
 interface Props {
@@ -27,7 +26,6 @@ export default function DoctorPage({ onSubmit, loading, error }: Props) {
       transition={{ duration: 0.3 }}
       className="max-w-2xl mx-auto px-4 py-10"
     >
-      <AppHeader />
       <StepIndicator current="doctor" />
 
       <h1

@@ -26,6 +26,7 @@ export type PersonalizedSummary = Record<string, unknown>;
 interface PipelineOutcome {
   schema: DashboardSchema;
   patientId: string | null;
+  doctorName: string | null;
 }
 
 export async function extractPatientRecord(rawNote: string): Promise<PatientRecord> {
@@ -51,21 +52,29 @@ export async function generateUI(
     patient_record: record,
     personalized_summary: summary,
   });
-  return { schema: response.data, patientId: (response.headers["x-patient-id"] as string) ?? null };
+  return {
+    schema: response.data,
+    patientId: (response.headers["x-patient-id"] as string) ?? null,
+    doctorName: (response.headers["x-doctor-name"] as string) ?? null,
+  };
 }
 
 export async function runFullPipeline(rawNote: string): Promise<PipelineOutcome> {
   const response = await apiClient.post<DashboardSchema>("/pipeline/run", { raw_note: rawNote });
-  return { schema: response.data, patientId: (response.headers["x-patient-id"] as string) ?? null };
+  return {
+    schema: response.data,
+    patientId: (response.headers["x-patient-id"] as string) ?? null,
+    doctorName: (response.headers["x-doctor-name"] as string) ?? null,
+  };
 }
 
-export async function getMyDashboard(): Promise<DashboardSchema> {
-  const { data } = await apiClient.get<DashboardSchema>("/me/dashboard");
-  return data;
+export async function getMyDashboard(): Promise<{ schema: DashboardSchema; doctorName: string | null }> {
+  const response = await apiClient.get<DashboardSchema>("/me/dashboard");
+  return { schema: response.data, doctorName: (response.headers["x-doctor-name"] as string) ?? null };
 }
 
-export async function registerDoctor(email: string, password: string): Promise<void> {
-  await apiClient.post("/auth/register-doctor", { email, password });
+export async function registerDoctor(email: string, password: string, fullName?: string): Promise<void> {
+  await apiClient.post("/auth/register-doctor", { email, password, full_name: fullName || undefined });
 }
 
 export async function listDoctors(): Promise<{ id: string; email: string; created_at: string }[]> {
@@ -86,5 +95,71 @@ export async function registerPatientAccount(params: {
     password: params.password,
   });
 }
+
+export interface ConsultationSummary {
+  id: string;
+  created_at: string;
+  raw_note: string;
+  doctor_name: string | null;
+  diagnostics: string[];
+  clinical_goals: { label: string; unit: string }[];
+}
+
+export async function getPatientConsultations(patientId: string): Promise<ConsultationSummary[]> {
+  const { data } = await apiClient.get(`/patients/${patientId}/consultations`);
+  return data;
+}
+
+export interface GoalTrendPoint {
+  date: string;
+  current_value: number;
+  target_value: number;
+  unit: string;
+}
+
+export async function getGoalTrend(patientId: string, goalLabel: string): Promise<GoalTrendPoint[]> {
+  const { data } = await apiClient.get(`/patients/${patientId}/goal-trend/${encodeURIComponent(goalLabel)}`);
+  return data;
+}
+
+export async function getPatientLatestDashboard(patientId: string): Promise<DashboardSchema> {
+  const { data } = await apiClient.get(`/patients/${patientId}/dashboard/latest`);
+  return data;
+}
+
+export interface PatientSummary {
+  id: string;
+  full_name: string;
+  birth_date: string;
+  consultation_count: number;
+}
+
+export async function listPatients(): Promise<PatientSummary[]> {
+  const { data } = await apiClient.get<PatientSummary[]>("/patients");
+  return data;
+}
+
+export interface ConsultationDetail extends ConsultationSummary {
+  doctor_name: string | null;
+}
+
+export async function getConsultationDashboard(
+  patientId: string,
+  consultationId: string
+): Promise<{ schema: DashboardSchema; doctorName: string | null }> {
+  const response = await apiClient.get<DashboardSchema>(
+    `/patients/${patientId}/consultations/${consultationId}/dashboard`
+  );
+  return { schema: response.data, doctorName: (response.headers["x-doctor-name"] as string) ?? null };
+}
+
+export async function continueConsultation(
+  patientId: string,
+  rawNote: string
+): Promise<{ schema: DashboardSchema; doctorName: string | null }> {
+  const response = await apiClient.post<DashboardSchema>(`/patients/${patientId}/continue`, { raw_note: rawNote });
+  return { schema: response.data, doctorName: (response.headers["x-doctor-name"] as string) ?? null };
+}
+
 
 export default apiClient;

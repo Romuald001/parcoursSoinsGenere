@@ -25,7 +25,7 @@ async def generate_ui(
     payload: GenerateUIRequest,
     response: Response,
     db: Session = Depends(get_db),
-    _doctor: UserORM = Depends(require_doctor),
+    doctor: UserORM = Depends(require_doctor),
 ) -> DashboardSchema:
     pipeline_result = PipelineResult(
         patient_record=payload.patient_record,
@@ -33,7 +33,8 @@ async def generate_ui(
     )
 
     patient_orm = get_or_create_patient(db, payload.patient_record)
-    save_consultation(db, patient_orm, "", payload.patient_record, payload.personalized_summary)
+    save_consultation(db, patient_orm, "", payload.patient_record, payload.personalized_summary, doctor)
     response.headers["X-Patient-Id"] = patient_orm.id
+    response.headers["X-Doctor-Name"] = doctor.full_name or doctor.email or "Médecin"
 
     return transform_to_dashboard_schema(pipeline_result)

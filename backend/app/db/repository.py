@@ -34,9 +34,11 @@ def save_consultation(
     raw_note: str,
     record: PatientRecord,
     summary: PersonalizedSummary,
+    doctor: UserORM | None = None,
 ) -> ConsultationORM:
     consultation = ConsultationORM(
         patient_id=patient.id,
+        doctor_id=doctor.id if doctor else None,
         raw_note=raw_note,
         patient_record_json=record.model_dump_json(),
         personalized_summary_json=summary.model_dump_json(),
@@ -77,10 +79,27 @@ def get_goal_trend(db: Session, patient_id: str, goal_label: str) -> list[dict]:
 
 
 def get_user_by_identifier(db: Session, identifier: str) -> UserORM | None:
-    """Retrouve un utilisateur par email OU téléphone — un patient peut
-    se connecter avec l'un ou l'autre selon ce qui a été renseigné."""
     return (
         db.query(UserORM)
         .filter((UserORM.email == identifier) | (UserORM.phone == identifier))
         .first()
     )
+
+
+def get_doctor_display_name(db: Session, doctor_id: str | None) -> str | None:
+    """Retourne le nom complet du médecin, ou son email à défaut,
+    pour affichage sur le dashboard patient et l'export PDF."""
+    if not doctor_id:
+        return None
+    doctor = db.query(UserORM).filter_by(id=doctor_id).first()
+    if not doctor:
+        return None
+    return doctor.full_name or doctor.email or "Médecin"
+
+
+def get_consultation_by_id(db: Session, consultation_id: str) -> ConsultationORM | None:
+    return db.query(ConsultationORM).filter_by(id=consultation_id).first()
+
+
+def get_patient_by_id(db: Session, patient_id: str) -> PatientORM | None:
+    return db.query(PatientORM).filter_by(id=patient_id).first()
