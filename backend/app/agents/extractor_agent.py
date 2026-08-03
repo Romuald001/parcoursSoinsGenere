@@ -32,16 +32,28 @@ class ExtractorAgent(Agent):
     async def run_update(self, previous_record: PatientRecord, raw_note: str) -> PatientRecord:
         """Met à jour un dossier existant à partir d'une nouvelle note,
         en conservant l'historique clinique pertinent (pas une ré-extraction
-        depuis zéro)."""
+        depuis zéro).
+
+        Important : les 'alerts' du dossier précédent ne sont JAMAIS transmises
+        au LLM. Les alertes sont produites exclusivement par l'Agent Vérificateur
+        (règles déterministes), pas par l'Agent Extracteur — les lui transmettre
+        créait une confusion qui faisait halluciner des objets Alert incomplets."""
+        clean_previous = previous_record.model_copy(update={"alerts": []})
+
         user_message = (
-            f"DOSSIER ACTUEL:\n{previous_record.model_dump_json()}\n\n"
+            f"DOSSIER ACTUEL:\n{clean_previous.model_dump_json()}\n\n"
             f"NOUVELLE NOTE:\n{raw_note}"
         )
         raw_response = await self._llm_client.complete(
             system_prompt=EXTRACTOR_UPDATE_SYSTEM_PROMPT,
             user_message=user_message,
         )
-        return self._parse_response(raw_response)
+        record = self._parse_response(raw_response)
+
+        # Sécurité supplémentaire : même si le LLM ignorait la consigne et
+        # renvoyait quand même un champ "alerts", on ne lui fait jamais confiance
+        # pour ce champ — on le réinitialise systématiquement côté code.
+        return record.model_copy(update={"alerts": []})
 
     def _parse_response(self, raw_response: str) -> PatientRecord:
         json_text = self._extract_json_block(raw_response)
@@ -51,6 +63,7 @@ class ExtractorAgent(Agent):
             raise ExtractionError(
                 f"La réponse du LLM n'est pas un JSON valide : {e}\nRéponse brute : {raw_response}"
             ) from e
+        data.pop("alerts", None)  # défense en profondeur avant même la validation Pydantic
         try:
             return PatientRecord.model_validate(data)
         except Exception as e:

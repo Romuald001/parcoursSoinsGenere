@@ -132,6 +132,7 @@ export interface PatientSummary {
   full_name: string;
   birth_date: string;
   consultation_count: number;
+  consulted_by_me: boolean;
 }
 
 export async function listPatients(): Promise<PatientSummary[]> {

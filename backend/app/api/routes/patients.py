@@ -14,6 +14,7 @@ from app.db.repository import (
     get_goal_trend,
     get_patient_by_id,
     get_patient_consultations,
+    get_patient_ids_consulted_by,
     list_patients,
     save_consultation,
 )
@@ -33,20 +34,25 @@ def _check_access(user: UserORM, patient_id: str) -> None:
 
 
 @router.get("/patients")
-def get_patients(db: Session = Depends(get_db), _doctor: UserORM = Depends(require_doctor)):
-    """Tous les médecins voient tous les patients (continuité de soins :
-    un médecin absent ou indisponible ne bloque pas l'accès au dossier)."""
+def get_patients(
+    db: Session = Depends(get_db),
+    doctor: UserORM = Depends(require_doctor),
+):
+    """Tous les médecins voient tous les patients (continuité de soins),
+    mais chaque patient indique s'il a déjà été consulté par CE médecin
+    (consulted_by_me), pour permettre le filtre 'Mes patients' côté UI."""
     patients = list_patients(db)
+    consulted_ids = get_patient_ids_consulted_by(db, doctor.id)
     return [
         {
             "id": p.id,
             "full_name": f"{p.first_name} {p.last_name}",
             "birth_date": p.birth_date,
             "consultation_count": len(p.consultations),
+            "consulted_by_me": p.id in consulted_ids,
         }
         for p in patients
     ]
-
 
 @router.get("/patients/{patient_id}/consultations")
 def get_consultations(patient_id: str, db: Session = Depends(get_db), user: UserORM = Depends(get_current_user)):

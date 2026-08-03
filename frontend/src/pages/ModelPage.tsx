@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ArrowLeft, ChevronDown, Pill, Stethoscope, Target, Calendar, type LucideIcon } from "lucide-react";
 import StepIndicator from "../components/layout/StepIndicator";
 import type { PatientRecord } from "../api/client";
+import PageShell from "../components/layout/PageShell";
 
 interface Props {
   record: PatientRecord;
@@ -68,6 +69,7 @@ export default function ModelPage({ record, onConfirm, onBack, loading, error }:
   const alerts = (record.alerts as AlertItem[] | undefined) ?? [];
 
   return (
+    <PageShell>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -185,5 +187,6 @@ export default function ModelPage({ record, onConfirm, onBack, loading, error }:
         </p>
       )}
     </motion.div>
+    </PageShell>
   );
 }

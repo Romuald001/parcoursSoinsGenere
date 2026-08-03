@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserPlus, Stethoscope, Loader2 } from "lucide-react";
 import AppHeader from "../components/layout/AppHeader";
 import { registerDoctor, listDoctors } from "../api/client";
+import PageShell from "../components/layout/PageShell";
 
 export default function AdminDashboardPage() {
   const queryClient = useQueryClient();
@@ -46,6 +47,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
+    <PageShell>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -137,5 +139,6 @@ export default function AdminDashboardPage() {
         ))}
       </div>
     </motion.div>
+    </PageShell>
   );
 }

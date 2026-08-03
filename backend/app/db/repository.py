@@ -103,3 +103,15 @@ def get_consultation_by_id(db: Session, consultation_id: str) -> ConsultationORM
 
 def get_patient_by_id(db: Session, patient_id: str) -> PatientORM | None:
     return db.query(PatientORM).filter_by(id=patient_id).first()
+
+
+def get_patient_ids_consulted_by(db: Session, doctor_id: str) -> set[str]:
+    """Retourne l'ensemble des patient_id ayant au moins une consultation
+    réalisée par ce médecin — utilisé pour le filtre 'Mes patients'."""
+    rows = (
+        db.query(ConsultationORM.patient_id)
+        .filter(ConsultationORM.doctor_id == doctor_id)
+        .distinct()
+        .all()
+    )
+    return {row[0] for row in rows}

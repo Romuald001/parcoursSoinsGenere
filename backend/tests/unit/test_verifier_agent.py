@@ -75,3 +75,33 @@ async def test_goal_not_reached_triggers_no_alert():
     )
     result = await VerifierAgent().run(record)
     assert len(result.alerts) == 0
+
+
+@pytest.mark.asyncio
+async def test_high_systolic_pressure_triggers_critical_alert():
+    record = make_base_record(
+        clinical_goals=[ClinicalGoal(label="Tension artérielle systolique", current_value=185.0, unit="mmHg")]
+    )
+    result = await VerifierAgent().run(record)
+    assert any(a.triggered_by == "hypertensive_crisis_systolic" for a in result.alerts)
+
+
+@pytest.mark.asyncio
+async def test_low_systolic_pressure_triggers_critical_alert():
+    record = make_base_record(
+        clinical_goals=[ClinicalGoal(label="Tension artérielle systolique", current_value=60.0, unit="mmHg")]
+    )
+    result = await VerifierAgent().run(record)
+    assert any(a.triggered_by == "hypotension_systolic" for a in result.alerts)
+
+
+@pytest.mark.asyncio
+async def test_normal_blood_pressure_triggers_no_alert():
+    record = make_base_record(
+        clinical_goals=[
+            ClinicalGoal(label="Tension artérielle systolique", current_value=120.0, unit="mmHg"),
+            ClinicalGoal(label="Tension artérielle diastolique", current_value=80.0, unit="mmHg"),
+        ]
+    )
+    result = await VerifierAgent().run(record)
+    assert len(result.alerts) == 0

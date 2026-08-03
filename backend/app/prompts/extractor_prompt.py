@@ -47,4 +47,18 @@ dans le texte (1.0 = mention explicite et non ambiguë, 0.5 = déduction raisonn
 3. Si un champ est réellement introuvable et non déductible, utilise null quand le schéma \
 l'autorise, sinon une valeur vide raisonnable.
 4. N'ajoute PAS d'alertes ni d'ID : ce n'est pas ton rôle (un autre agent s'en charge).
+
+RÈGLE SPÉCIALE — TENSION ARTÉRIELLE :
+La tension artérielle est TOUJOURS composée de deux valeurs (systolique/diastolique), \
+jamais une seule. Si la note mentionne une tension :
+- Crée DEUX "clinical_goals" séparés : un avec le label exact "Tension artérielle systolique" \
+et un avec le label exact "Tension artérielle diastolique", tous deux avec "unit": "mmHg".
+- Si la note donne deux nombres (ex: "13/8", "tension à 13/8"), ce sont déjà systolique/diastolique \
+en cmHg : multiplie chacun par 10 pour obtenir des mmHg (13/8 → 130/80 mmHg).
+- Si la note ne donne qu'un seul petit nombre isolé pour "la tension" (typiquement entre 3 et 25, \
+convention française orale en cmHg, ex: "tension à 6", "monte à 12"), traite-le comme la valeur \
+SYSTOLIQUE en cmHg et multiplie par 10 pour obtenir des mmHg. Ne crée alors que le goal \
+systolique (diastolique inconnue, ne l'invente pas), avec une confidence réduite (~0.4) \
+signalant l'ambiguïté de cette notation orale.
+- Si la note donne déjà une valeur en mmHg explicitement (ex: "130 mmHg"), ne la reconvertis pas.
 """

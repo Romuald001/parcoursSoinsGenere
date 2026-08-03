@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Loader2 } from "lucide-react";
 import StepIndicator from "../components/layout/StepIndicator";
+import PageShell from "../components/layout/PageShell";
 
 interface Props {
   onSubmit: (rawNote: string) => void;
@@ -20,11 +21,12 @@ export default function DoctorPage({ onSubmit, loading, error }: Props) {
   const [note, setNote] = useState("");
 
   return (
+    <PageShell>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="max-w-2xl mx-auto px-4 py-10"
+      className="max-w-6xl mx-auto"
     >
       <StepIndicator current="doctor" />
 
@@ -85,5 +87,6 @@ export default function DoctorPage({ onSubmit, loading, error }: Props) {
         </motion.p>
       )}
     </motion.div>
+    </PageShell>
   );
 }

@@ -11,6 +11,7 @@ import {
 } from "../api/client";
 import type { DashboardSchema } from "../types/dashboardSchema";
 import PatientPage from "./PatientPage";
+import PageShell from "../components/layout/PageShell";
 
 interface Props {
   patientId: string;
@@ -84,7 +85,7 @@ export default function PatientDetailPage({ patientId, onBack }: Props) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
+    <PageShell>
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 text-sm font-medium mb-6"
@@ -224,6 +225,6 @@ export default function PatientDetailPage({ patientId, onBack }: Props) {
           </button>
         ))}
       </div>
-    </div>
+    </PageShell>
   );
 }

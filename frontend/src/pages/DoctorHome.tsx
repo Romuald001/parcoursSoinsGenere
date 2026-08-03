@@ -13,7 +13,7 @@ export default function DoctorHome() {
 
   return (
     <div>
-      <div className="max-w-2xl mx-auto px-4 pt-10">
+      <div className="max-w-6xl mx-auto px-6 pt-10">
         <AppHeader />
         <div className="flex gap-2 mb-2 print:hidden">
           <button

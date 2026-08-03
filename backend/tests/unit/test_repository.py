@@ -75,3 +75,40 @@ def test_get_user_by_identifier_matches_email_or_phone(db_session):
     assert get_user_by_identifier(db_session, "a@example.com").id == user.id
     assert get_user_by_identifier(db_session, "0600000000").id == user.id
     assert get_user_by_identifier(db_session, "inconnu") is None
+
+
+def test_run_update_strips_alerts_from_previous_record():
+    """Vérifie que l'Agent Extracteur ne transmet jamais les alertes
+    du dossier précédent au LLM, et n'en renvoie jamais lui-même."""
+    import asyncio
+    from datetime import date
+    from app.agents.extractor_agent import ExtractorAgent
+    from app.domain.models.alert import Alert
+    from app.domain.models.enums import AlertSeverity, Gender, HealthLiteracyLevel
+    from app.domain.models.patient import Patient
+    from app.domain.models.patient_record import PatientRecord
+    from app.services.llm_client import LLMClient
+
+    class SpyLLMClient(LLMClient):
+        def __init__(self):
+            self.last_user_message = None
+
+        async def complete(self, system_prompt: str, user_message: str) -> str:
+            self.last_user_message = user_message
+            return '{"patient": {"first_name": "Marie", "last_name": "Dupont", "birth_date": "2000-01-01", "gender": "other", "health_literacy_level": "medium"}, "diagnostics": [], "medications": [], "treatment_steps": [], "clinical_goals": [], "appointments": []}'
+
+    previous = PatientRecord(
+        patient=Patient(
+            first_name="Marie", last_name="Dupont", birth_date=date(2000, 1, 1),
+            gender=Gender.OTHER, health_literacy_level=HealthLiteracyLevel.MEDIUM,
+        ),
+        alerts=[Alert(severity=AlertSeverity.WARNING, message="CECI_NE_DOIT_JAMAIS_ETRE_TRANSMIS", triggered_by="test")],
+    )
+
+    spy = SpyLLMClient()
+    agent = ExtractorAgent(llm_client=spy)
+    result = asyncio.run(agent.run_update(previous, "note de suivi"))
+
+    assert result.alerts == []
+    assert '"alerts":[]' in spy.last_user_message
+    assert "CECI_NE_DOIT_JAMAIS_ETRE_TRANSMIS" not in spy.last_user_message

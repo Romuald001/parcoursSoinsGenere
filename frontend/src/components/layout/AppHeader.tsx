@@ -1,6 +1,7 @@
 import { Stethoscope, LogOut } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 
+
 export default function AppHeader() {
   const { token, logout } = useAuth();
 
