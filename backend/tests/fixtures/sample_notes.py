@@ -7,7 +7,7 @@ Patient: Marie Lambert, née le 14/03/1965, sexe féminin, niveau de compréhens
 Suivie pour un diabète de type 2 diagnostiqué il y a 3 ans, assez bien contrôlé.
 Actuellement sous Metformine 850mg, 2 fois par jour.
 Se plaint de fatigue modérée depuis 2 semaines.
-Prochain rendez-vous de suivi prévu le 15 septembre 2026 à 10h, cabinet du Dr Martin.
+Prochain rendez-vous de suivi prévu le 15 septembre 2026 à 10h, cabinet du Dr Romuald.
 Objectif : ramener l'HbA1c sous 7%, actuellement à 7.8%.
 """
 

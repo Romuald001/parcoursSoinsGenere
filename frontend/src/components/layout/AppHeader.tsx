@@ -1,12 +1,11 @@
 import { Stethoscope, LogOut } from "lucide-react";
 import { useAuth } from "../../context/useAuth";
 
-
 export default function AppHeader() {
   const { token, logout } = useAuth();
 
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="app-header-bg flex items-center justify-between print:hidden">
       <div className="flex items-center gap-2.5">
         <div
           className="w-9 h-9 rounded-lg flex items-center justify-center"
@@ -24,7 +23,7 @@ export default function AppHeader() {
       {token && (
         <button
           onClick={logout}
-          className="flex items-center gap-1.5 text-xs font-medium transition hover:opacity-70 print:hidden"
+          className="flex items-center gap-1.5 text-xs font-medium transition hover:opacity-70"
           style={{ color: "var(--slate)" }}
         >
           <LogOut size={13} />

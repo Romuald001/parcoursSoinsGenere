@@ -10,7 +10,8 @@ function App() {
   if (!token) return <LoginPage />;
   if (role === "admin") return <AdminDashboardPage />;
   if (role === "patient") return <PatientOwnDashboardPage />;
-  return <DoctorHome />;
+  if (role === "doctor") return <DoctorHome />;
+  return <LoginPage />;
 }
 
 export default App;

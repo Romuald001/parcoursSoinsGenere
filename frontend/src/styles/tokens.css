@@ -41,3 +41,29 @@ body {
   .print\:hidden { display: none !important; }
   .print-columns-1 { columns: 1 !important; }
 }
+
+.app-header-bg {
+  background: linear-gradient(180deg, var(--paper-raised) 0%, var(--sage-soft) 180%);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 18px 18px;
+  padding: 1.1rem 1.5rem;
+  margin: 0 -1.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-header-bg::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--sage), transparent);
+  animation: header-sweep 4s ease-in-out infinite;
+}
+
+@keyframes header-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
